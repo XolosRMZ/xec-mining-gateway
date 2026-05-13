@@ -1,0 +1,102 @@
+import {
+  ApiError,
+  ChallengeResponse,
+  SessionStatusResponse,
+  VerifyResponse,
+} from "./types";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001";
+
+const buildUrl = (path: string) => `${API_BASE_URL}${path}`;
+
+const parseJson = async <T>(response: Response): Promise<T> => {
+  const text = await response.text();
+  let data: unknown = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      if (!response.ok) {
+        throw {
+          error: `Request failed with status ${response.status}`,
+          status: response.status,
+        } satisfies ApiError;
+      }
+
+      throw {
+        error: "Received invalid JSON from server",
+        status: response.status,
+      } satisfies ApiError;
+    }
+  }
+
+  if (!response.ok) {
+    const errorMessage =
+      typeof data === "object" &&
+      data !== null &&
+      "error" in data &&
+      typeof data.error === "string"
+        ? data.error
+        : `Request failed with status ${response.status}`;
+    throw { error: errorMessage, status: response.status } satisfies ApiError;
+  }
+
+  return data as T;
+};
+
+export const requestChallenge = async (
+  wallet: string,
+): Promise<ChallengeResponse> => {
+  const response = await fetch(buildUrl("/v1/auth/request-challenge"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ wallet }),
+  });
+
+  return parseJson<ChallengeResponse>(response);
+};
+
+export const verifyChallenge = async (
+  wallet: string,
+  challengeId: string,
+  signature: string,
+): Promise<VerifyResponse> => {
+  const response = await fetch(buildUrl("/v1/auth/verify"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ wallet, challengeId, signature }),
+  });
+
+  return parseJson<VerifyResponse>(response);
+};
+
+export const getSessionStatus = async (
+  sessionToken: string,
+): Promise<SessionStatusResponse> => {
+  const response = await fetch(buildUrl("/v1/session/status"), {
+    headers: {
+      Authorization: `Bearer ${sessionToken}`,
+    },
+  });
+
+  return parseJson<SessionStatusResponse>(response);
+};
+
+export const revokeSession = async (
+  sessionToken: string,
+): Promise<{ revoked: boolean }> => {
+  const response = await fetch(buildUrl("/v1/session/revoke"), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${sessionToken}`,
+    },
+  });
+
+  return parseJson<{ revoked: boolean }>(response);
+};

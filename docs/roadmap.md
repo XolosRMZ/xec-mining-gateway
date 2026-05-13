@@ -26,6 +26,27 @@ Out of scope:
 - Stratum integration
 - production membership billing
 
+## Prototype 2 - Membership Portal UI
+
+Status: prototype
+
+Scope:
+
+- wallet input
+- challenge request
+- mock signature generation
+- session token display
+- session status check
+- session revocation
+
+Out of scope:
+
+- real wallet connection
+- real signature verification
+- Chronik integration
+- Stratum integration
+- production auth security
+
 ## Milestone 2 - Stratum Gateway
 
 - Operational miner access layer
