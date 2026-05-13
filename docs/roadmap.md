@@ -7,6 +7,25 @@
 - XEC base membership activation
 - Session token issuance
 
+## Prototype 1 - Membership Gateway Control Plane
+
+Status: in progress / prototype
+
+Scope:
+
+- challenge generation
+- mock signature verification
+- session token issuance
+- session status
+- session revocation
+
+Out of scope:
+
+- real wallet cryptographic verification
+- Chronik integration
+- Stratum integration
+- production membership billing
+
 ## Milestone 2 - Stratum Gateway
 
 - Operational miner access layer
