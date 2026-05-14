@@ -7,6 +7,7 @@ This frontend is Prototype 2 for the Membership Gateway flow. It provides a smal
 - generating the required mock signature automatically
 - verifying the challenge in mock or Tonalli mode
 - receiving a session token
+- viewing RMZ membership status
 - checking session status
 - revoking the session
 
@@ -44,9 +45,10 @@ npm run build
 1. enter wallet
 2. request challenge
 3. choose Mock or Tonalli mode
-4. receive session token
-5. check status
-6. revoke session
+4. pass RMZ membership verification
+5. receive session token and membership status
+6. check status
+7. revoke session
 
 ## Mock Mode
 
@@ -54,7 +56,7 @@ npm run build
 - request a challenge
 - keep the default `Mock Prototype` mode
 - the UI generates `mock-signature:<wallet>:<challengeId>` automatically
-- verify and receive a session token
+- verify and receive a session token if the wallet has active mock RMZ membership
 
 ## Tonalli Mode
 
@@ -67,3 +69,10 @@ npm run build
 - submit the verify request
 
 Tonalli mode expects a real signature produced by Tonalli Wallet over the exact challenge message shown by the frontend.
+
+## Prototype 5 Notes
+
+- The UI now shows RMZ membership status.
+- The approved test wallet can complete the flow:
+  `ecash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a`
+- A non-approved wallet should fail at verification with `RMZ membership required`.

@@ -2,9 +2,16 @@
 
 ## Overview
 
-This repository defines the initial architecture for **eCash Mexico Sovereign Mining Infrastructure - Phase 1**. The purpose of this system is to provide sovereign mining coordination infrastructure for eCash (XEC) without introducing wallet custody or putting membership checks in the mining hot path.
+This repository defines the initial architecture for **eCash México Sovereign Mining Infrastructure - Phase 1**. The purpose of this system is to provide sovereign mining coordination infrastructure for eCash (XEC) without introducing wallet custody or putting membership checks in the mining hot path.
 
 Phase 1 is documentation-first and architecture-first. It does not yet implement a production mining pool, real Stratum mining logic, or a payout engine.
+
+The current Phase 1 identity and access model is:
+
+- Tonalli Wallet as the identity layer
+- RMZ as the required membership layer
+- eCash México as the infrastructure layer
+- xolosArmy Network as the cultural and community layer
 
 ## System Model
 
@@ -45,7 +52,7 @@ Primary duties:
 
 - accept wallet connections
 - generate and verify signed authentication challenges
-- check XEC membership status
+- check RMZ membership status
 - issue short-lived session tokens
 - revoke sessions when needed
 - expose operator and member-facing dashboard state
@@ -71,7 +78,7 @@ The Stratum Gateway is the primary Data Plane component.
 
 ### Membership Gateway
 
-The Membership Gateway is the authentication and session control entrypoint. It verifies signed wallet challenges, checks membership state, and issues revocable session tokens for miners. This is the boundary between wallet-based identity and mining access.
+The Membership Gateway is the authentication and session control entrypoint. It verifies signed wallet challenges, checks membership state, and issues revocable session tokens for miners. Tonalli Wallet provides identity; RMZ provides membership. This is the boundary between wallet-based identity and mining access.
 
 ### Stratum Gateway
 
@@ -80,6 +87,8 @@ The Stratum Gateway accepts ASIC miner connections and validates access using pr
 ### eCash Node + Chronik
 
 The eCash node and Chronik provide blockchain state and indexing support for membership-related verification, operational reporting, and future ecosystem integrations. They are foundational dependencies for trustworthy chain-aware infrastructure, but they must not sit in the active share submission path.
+
+Chronik-based on-chain RMZ verification is future work. Prototype 5 uses a mock membership registry instead of real on-chain RMZ checks.
 
 ### Redis
 
@@ -124,6 +133,7 @@ Mining performance depends on keeping the active connection and share flow simpl
 Required Phase 1 principles:
 
 - membership validation happens before mining access is granted
+- RMZ membership is required for mining gateway membership access
 - session tokens are issued ahead of miner connection
 - share submission must not trigger blockchain queries
 - share submission must not call PostgreSQL
@@ -137,6 +147,7 @@ This design reduces stale risk and isolates chain-aware logic to the control pla
 - Session token expiration: session tokens should be short-lived and renewed intentionally.
 - Revocation cache: revoked sessions should be pushed into a fast local cache so gateways can reject them without database round trips.
 - No blockchain queries during share submission: chain queries belong outside the mining hot path.
+- Prototype 5 uses a mock membership registry; production RMZ verification remains a later phase.
 
 ## Phase 1 Scope Boundary
 

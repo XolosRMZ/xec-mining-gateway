@@ -6,7 +6,7 @@ This backend is the first minimal prototype for the Membership Gateway control p
 - server creates a nonce-backed challenge
 - client submits wallet, challenge ID, and either a mock signature or a Tonalli signature payload
 - server performs mock verification or Tonalli signature verification
-- server issues a session token
+- server verifies RMZ membership before issuing a session token
 - client checks session status
 - client revokes the session
 
@@ -18,12 +18,13 @@ This backend is the first minimal prototype for the Membership Gateway control p
 - supports session status and session revocation
 - preserves mock verification for development
 - verifies Tonalli-style signed messages with `ecash-lib`
+- enforces mock RMZ membership before session issuance
 
 ## What This Prototype Does Not Do Yet
 
 - Chronik membership verification
 - Stratum mining or gateway logic
-- RMZ logic
+- real on-chain RMZ verification
 - Redis or PostgreSQL persistence
 - production hardening such as rate limiting or durable audit logs
 
@@ -106,7 +107,12 @@ Example response:
   "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "tokenType": "Bearer",
   "expiresIn": 86400,
-  "plan": "prototype"
+  "plan": "founding-miner",
+  "membership": {
+    "active": true,
+    "tier": "founding-miner",
+    "source": "mock"
+  }
 }
 ```
 
@@ -166,6 +172,51 @@ node dist/scripts/verifyTonalliSignature.js "$WALLET" "$TONALLI_PUBLIC_KEY" "$TO
 - mock mode remains available for development
 - Tonalli mode expects a real signature over the exact challenge message
 - the prototype derives a P2PKH eCash wallet from the provided public key and compares it to the requested wallet
+- both mock and Tonalli modes now require active RMZ membership after signature verification
+
+## Prototype 5 - RMZ Membership Verification Mock
+
+RMZ membership is required before session token issuance.
+
+The current prototype uses a hardcoded approved wallet list.
+
+Approved wallet:
+
+`ecash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a`
+
+Any other wallet should receive:
+
+`403 RMZ membership required`
+
+### Approved Wallet Example
+
+```bash
+export WALLET="ecash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a"
+export CHALLENGE_JSON=$(curl -s -X POST http://localhost:3001/v1/auth/request-challenge \
+  -H "Content-Type: application/json" \
+  -d "{\"wallet\":\"$WALLET\"}")
+export CHALLENGE_ID=$(node -e 'const data = JSON.parse(process.argv[1]); console.log(data.challengeId);' "$CHALLENGE_JSON")
+export SIGNATURE="mock-signature:$WALLET:$CHALLENGE_ID"
+
+curl -X POST http://localhost:3001/v1/auth/verify \
+  -H "Content-Type: application/json" \
+  -d "{\"mode\":\"mock\",\"wallet\":\"$WALLET\",\"challengeId\":\"$CHALLENGE_ID\",\"signature\":\"$SIGNATURE\"}"
+```
+
+### Non-Approved Wallet Example
+
+```bash
+export WALLET="ecash:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq8k9d7x"
+export CHALLENGE_JSON=$(curl -s -X POST http://localhost:3001/v1/auth/request-challenge \
+  -H "Content-Type: application/json" \
+  -d "{\"wallet\":\"$WALLET\"}")
+export CHALLENGE_ID=$(node -e 'const data = JSON.parse(process.argv[1]); console.log(data.challengeId);' "$CHALLENGE_JSON")
+export SIGNATURE="mock-signature:$WALLET:$CHALLENGE_ID"
+
+curl -i -X POST http://localhost:3001/v1/auth/verify \
+  -H "Content-Type: application/json" \
+  -d "{\"mode\":\"mock\",\"wallet\":\"$WALLET\",\"challengeId\":\"$CHALLENGE_ID\",\"signature\":\"$SIGNATURE\"}"
+```
 
 ## Configuration
 

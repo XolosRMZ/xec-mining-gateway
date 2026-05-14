@@ -6,6 +6,7 @@ import {
   createChallenge,
   getChallenge,
 } from "../services/challenge";
+import { isRmzMember } from "../services/membership";
 import { issueSessionToken } from "../services/session";
 import {
   verifyMockSignature,
@@ -34,7 +35,7 @@ router.post("/request-challenge", (req, res) => {
   });
 });
 
-router.post("/verify", (req, res) => {
+router.post("/verify", async (req, res) => {
   const {
     mode,
     wallet,
@@ -112,18 +113,29 @@ router.post("/verify", (req, res) => {
     }
   }
 
+  const membership = await isRmzMember(normalizedWallet);
+
+  if (!membership.active) {
+    return res.status(403).json({ error: "RMZ membership required" });
+  }
+
   consumeChallenge(normalizedChallengeId);
 
   const sessionToken = issueSessionToken({
     wallet: normalizedWallet,
-    plan: "prototype",
+    plan: membership.tier,
   });
 
   return res.json({
     sessionToken,
     tokenType: "Bearer",
     expiresIn: config.SESSION_TTL_SECONDS,
-    plan: "prototype",
+    plan: membership.tier,
+    membership: {
+      active: membership.active,
+      tier: membership.tier,
+      source: membership.source,
+    },
   });
 });
 

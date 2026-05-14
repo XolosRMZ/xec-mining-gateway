@@ -8,10 +8,19 @@ export interface ChallengeRecord {
   used: boolean;
 }
 
+export type MembershipTier = "founding-miner" | "base" | "none";
+
+export interface MembershipStatus {
+  wallet: string;
+  tier: MembershipTier;
+  active: boolean;
+  source: "mock";
+}
+
 export interface SessionPayload {
   sub: string;
   wallet: string;
-  plan: string;
+  plan: MembershipTier;
   iat: number;
   exp: number;
 }
@@ -31,7 +40,7 @@ export interface AuthVerifyBody {
 export interface SessionStatusQuery {
   active: boolean;
   wallet?: string;
-  plan?: string;
+  plan?: MembershipTier;
   expiresAt?: string;
 }
 

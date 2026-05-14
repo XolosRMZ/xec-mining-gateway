@@ -196,6 +196,13 @@ function App() {
             Prototype 2 for the eCash México Sovereign Mining Infrastructure
             Teyolia campaign.
           </p>
+          <p className="note">
+            Membership access is powered by RMZ. Prototype 5 uses a mock RMZ
+            membership registry.
+          </p>
+          <p className="note">
+            Approved test wallet: <code>{DEFAULT_PLACEHOLDER}</code>
+          </p>
         </header>
 
         <section className="card">
@@ -336,6 +343,24 @@ function App() {
               <div>
                 <span className="result-label">Plan</span>
                 <pre className="code-block">{session.plan}</pre>
+              </div>
+              <div>
+                <span className="result-label">Membership Active</span>
+                <pre className="code-block">
+                  {String(session.membership?.active ?? false)}
+                </pre>
+              </div>
+              <div>
+                <span className="result-label">Membership Tier</span>
+                <pre className="code-block">
+                  {session.membership?.tier ?? "n/a"}
+                </pre>
+              </div>
+              <div>
+                <span className="result-label">Membership Source</span>
+                <pre className="code-block">
+                  {session.membership?.source ?? "n/a"}
+                </pre>
               </div>
               <div>
                 <span className="result-label">Expires In</span>

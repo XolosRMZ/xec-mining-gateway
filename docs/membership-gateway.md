@@ -2,9 +2,11 @@
 
 ## Purpose
 
-The Membership Gateway is the control-plane service that turns wallet-based identity into miner access. Its purpose is to authenticate a user with a signed wallet challenge, verify XEC membership status, and issue a time-bounded session token that an ASIC miner can use when connecting to the Stratum Gateway.
+The Membership Gateway is the control-plane service that turns wallet-based identity into miner access. Its purpose is to authenticate a user with a signed wallet challenge, verify RMZ membership status, and issue a time-bounded session token that an ASIC miner can use when connecting to the Stratum Gateway.
 
 This keeps identity and membership logic outside the mining hot path.
+
+Tonalli Wallet provides identity; RMZ provides membership. Membership access is powered by RMZ through Tonalli Wallet.
 
 ## Authentication Flow
 
@@ -12,7 +14,7 @@ This keeps identity and membership logic outside the mining hot path.
 2. Server generates challenge.
 3. Wallet signs challenge.
 4. Backend verifies signature.
-5. Backend checks XEC membership status.
+5. Backend checks RMZ membership status.
 6. Backend issues session token.
 7. ASIC uses session token to connect.
 
@@ -74,7 +76,7 @@ Response sketch:
 {
   "status": "active",
   "wallet": "ecash:qpm2...",
-  "plan": "base",
+  "plan": "founding-miner",
   "expiresAt": 1778617861
 }
 ```
@@ -99,7 +101,7 @@ Initial token payload example:
 {
   "sub": "sess_01hxyz",
   "wallet": "ecash:qpm2...",
-  "plan": "base",
+  "plan": "founding-miner",
   "exp": 1778617861,
   "sig": "gateway-signature"
 }
@@ -131,8 +133,8 @@ function verifyWalletLogin(wallet, challengeId, signature):
     reject("invalid signature")
 
   membership = getMembershipStatus(wallet)
-  if membership.baseXecAccess != true:
-    reject("membership inactive")
+  if membership.active != true:
+    reject("RMZ membership required")
 
   session = issueSessionToken(
     wallet = wallet,
@@ -148,9 +150,9 @@ function verifyWalletLogin(wallet, challengeId, signature):
 
 ## Membership Notes
 
-Base access is XEC-based. A valid XEC membership state is the requirement for initial access to the gateway.
+RMZ is the required membership layer for gateway access. Tonalli Wallet is the Phase 1 identity wallet. Prototype 5 uses a mock RMZ membership registry before any session token is issued.
 
-Future versions may support RMZ-linked extended membership perks such as premium access classes, community boosts, or optional feature unlocks. RMZ is optional and not required for base access.
+Chronik-based on-chain RMZ verification is future work. Billing, token locking or burning, and NFT pass validation are out of scope for this prototype.
 
 ## Operational Notes
 
@@ -158,3 +160,4 @@ Future versions may support RMZ-linked extended membership perks such as premium
 - Session issuance should produce a token that the Stratum Gateway can validate locally.
 - Revocations should propagate quickly through Redis or an equivalent low-latency cache.
 - The Membership Gateway should avoid coupling active mining traffic to Chronik or PostgreSQL lookups.
+- eCash México builds the infrastructure for the XEC ecosystem.

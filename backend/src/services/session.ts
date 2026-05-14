@@ -2,18 +2,18 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 
 import { config } from "../config";
-import { SessionPayload } from "../types";
+import { MembershipTier, SessionPayload } from "../types";
 
 const revokedTokens = new Set<string>();
 
 interface IssueSessionTokenParams {
   wallet: string;
-  plan?: string;
+  plan?: MembershipTier;
 }
 
 export const issueSessionToken = ({
   wallet,
-  plan = "prototype",
+  plan = "base",
 }: IssueSessionTokenParams): string => {
   const issuedAt = Math.floor(Date.now() / 1000);
   const expiresAt = issuedAt + config.SESSION_TTL_SECONDS;

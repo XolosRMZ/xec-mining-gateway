@@ -40,7 +40,7 @@ const parseJson = async <T>(response: Response): Promise<T> => {
       "error" in data &&
       typeof data.error === "string"
         ? data.error
-        : `Request failed with status ${response.status}`;
+        : text || `Request failed with status ${response.status}`;
     throw { error: errorMessage, status: response.status } satisfies ApiError;
   }
 
