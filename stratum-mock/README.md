@@ -6,7 +6,7 @@ It demonstrates:
 
 - worker subscribe
 - worker authorize
-- local JWT validation
+- local JWT validation plus Redis revocation lookup
 - accept/reject logic
 
 It does not implement:
@@ -17,13 +17,15 @@ It does not implement:
 - payouts
 - ASIC compatibility
 - Chronik
-- revocation sync
+- worker disconnect on revocation
 
 ## Install
 
 ```bash
 npm install
 ```
+
+Redis is now required. `REDIS_URL` must match the backend so both services read and write the same revocation cache.
 
 ## Run Server
 
@@ -47,10 +49,12 @@ npm run dev:client
 2. Start frontend.
 3. Generate session token from Membership Portal UI.
 4. Copy token into `stratum-mock/.env` as `SESSION_TOKEN`.
-5. Start Stratum mock server.
-6. Run mock miner client.
-7. Confirm `mining.authorize` returns `true`.
-8. Test invalid token by changing `SESSION_TOKEN` and confirm it returns `false`.
+5. Set the same `SESSION_SECRET` and `REDIS_URL` used by the backend.
+6. Start Stratum mock server.
+7. Run mock miner client.
+8. Confirm `mining.authorize` returns `true`.
+9. Revoke the session through the backend or frontend.
+10. Run the client again and confirm `mining.authorize` returns `false`.
 
 ## Important Note
 
@@ -59,3 +63,9 @@ npm run dev:client
 The backend `.env.example` uses `change-this-local-development-secret`, but the backend code also has a local fallback secret of `local-development-only-membership-gateway-secret` in [backend/src/config.ts](/home/xolos-ramirez/xec-mining-gateway/backend/src/config.ts). If the backend is running on that fallback during local tests, set the same value in `stratum-mock/.env` so token verification succeeds.
 
 This mock validates JWTs locally and does not have access to backend in-memory revocation state. Production needs shared Redis-backed revocation storage or another centralized validation cache.
+
+Prototype 7 replaces the old in-memory revocation gap with a shared Redis cache using:
+
+`revoked:<sha256(token)>`
+
+If Redis is unavailable during authorization, the Stratum mock fails closed and returns the same invalid-token response.

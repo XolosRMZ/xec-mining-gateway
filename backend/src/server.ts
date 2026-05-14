@@ -4,6 +4,7 @@ import helmet from "helmet";
 
 import { config } from "./config";
 import authRoutes from "./routes/auth";
+import { closeRedis } from "./services/redis";
 import sessionRoutes from "./routes/session";
 
 const app = express();
@@ -34,8 +35,23 @@ app.use((_req, res) => {
   res.status(404).json({ error: "not found" });
 });
 
-app.listen(config.PORT, () => {
+const server = app.listen(config.PORT, () => {
   console.log(
     `xec-mining-gateway membership prototype listening on port ${config.PORT}`
   );
+});
+
+const shutdown = async (): Promise<void> => {
+  await closeRedis();
+  server.close(() => {
+    process.exit(0);
+  });
+};
+
+process.on("SIGINT", () => {
+  void shutdown();
+});
+
+process.on("SIGTERM", () => {
+  void shutdown();
 });

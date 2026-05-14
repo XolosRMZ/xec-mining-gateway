@@ -56,6 +56,9 @@ export const config = {
   SESSION_SECRET:
     process.env.SESSION_SECRET ?? "local-development-only-membership-gateway-secret",
   SESSION_TTL_SECONDS: parseNumber(process.env.SESSION_TTL_SECONDS, 86400),
+  // Redis is used for shared session revocation between Membership Gateway and Stratum Gateway.
+  // Local development requires Redis running on localhost:6379.
+  REDIS_URL: process.env.REDIS_URL ?? "redis://localhost:6379",
   CHALLENGE_TTL_SECONDS: parseNumber(process.env.CHALLENGE_TTL_SECONDS, 300),
   MEMBERSHIP_MODE: parseMembershipMode(process.env.MEMBERSHIP_MODE),
   CHRONIK_URLS: parseChronikUrls(process.env.CHRONIK_URLS),

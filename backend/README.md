@@ -23,7 +23,7 @@ This backend is the first minimal prototype for the Membership Gateway control p
 ## What This Prototype Does Not Do Yet
 
 - Stratum mining or gateway logic
-- Redis or PostgreSQL persistence
+- PostgreSQL persistence
 - production hardening such as rate limiting or durable audit logs
 
 ## Install
@@ -39,6 +39,41 @@ npm run dev
 ```
 
 The server defaults to `http://localhost:3001`.
+
+## Prototype 7 - Redis Revocation Cache
+
+Prototype 7 adds Redis-backed session revocation shared with `stratum-mock`.
+
+### Local Redis Setup
+
+Ubuntu/Debian:
+
+```bash
+sudo apt update
+sudo apt install redis-server
+sudo systemctl start redis-server
+redis-cli ping
+```
+
+Expected:
+
+```text
+PONG
+```
+
+Docker alternative:
+
+```bash
+docker run --name xec-mining-redis -p 6379:6379 -d redis:7
+```
+
+Environment:
+
+```bash
+REDIS_URL=redis://localhost:6379
+```
+
+If Redis is unavailable, `POST /v1/session/revoke` returns a clear error and does not pretend the token was revoked.
 
 ## Test Health
 
@@ -224,6 +259,7 @@ Copy `.env.example` to `.env` if you want to override defaults:
 PORT=3001
 SESSION_SECRET=change-this-local-development-secret
 SESSION_TTL_SECONDS=86400
+REDIS_URL=redis://localhost:6379
 CHALLENGE_TTL_SECONDS=300
 ```
 

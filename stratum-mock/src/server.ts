@@ -38,7 +38,10 @@ const handleSubscribe = (socket: net.Socket, request: JsonRpcRequest): void => {
   });
 };
 
-const handleAuthorize = (socket: net.Socket, request: JsonRpcRequest): void => {
+const handleAuthorize = async (
+  socket: net.Socket,
+  request: JsonRpcRequest,
+): Promise<void> => {
   const [workerName, sessionToken] = request.params as MiningAuthorizeParams;
 
   if (typeof workerName !== "string" || typeof sessionToken !== "string") {
@@ -50,13 +53,13 @@ const handleAuthorize = (socket: net.Socket, request: JsonRpcRequest): void => {
     return;
   }
 
-  const session = verifySessionToken(sessionToken);
+  const session = await verifySessionToken(sessionToken);
 
   if (!session) {
     respond(socket, {
       id: request.id,
       result: false,
-      error: "Invalid or expired session token",
+      error: "Invalid, expired, or revoked session token",
     });
     return;
   }
@@ -103,7 +106,7 @@ const server = net.createServer((socket) => {
           } else if (parsed.method === "mining.subscribe") {
             handleSubscribe(socket, parsed);
           } else if (parsed.method === "mining.authorize") {
-            handleAuthorize(socket, parsed);
+            void handleAuthorize(socket, parsed);
           } else {
             respond(socket, {
               id: parsed.id ?? null,
@@ -142,6 +145,6 @@ server.listen(config.STRATUM_PORT, config.STRATUM_HOST, () => {
     `Stratum mock server listening on ${config.STRATUM_HOST}:${config.STRATUM_PORT}`,
   );
   console.log(
-    "Local JWT validation only. Production needs shared revocation storage or centralized validation cache.",
+    "JWT validation now checks Redis-backed revocations before accepting a token.",
   );
 });

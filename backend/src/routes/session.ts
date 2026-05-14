@@ -1,6 +1,7 @@
 import { Request, Router } from "express";
 
 import {
+  decodeSessionToken,
   revokeSessionToken,
   verifySessionToken,
 } from "../services/session";
@@ -24,7 +25,7 @@ const extractBearerToken = (req: Request): string | null => {
   return token;
 };
 
-router.get("/status", (req, res) => {
+router.get("/status", async (req, res) => {
   const token = extractBearerToken(req);
 
   if (!token) {
@@ -32,7 +33,7 @@ router.get("/status", (req, res) => {
     return res.json(response);
   }
 
-  const session = verifySessionToken(token);
+  const session = await verifySessionToken(token);
 
   if (!session) {
     const response: SessionStatusQuery = { active: false };
@@ -49,20 +50,27 @@ router.get("/status", (req, res) => {
   return res.json(response);
 });
 
-router.post("/revoke", (req, res) => {
+router.post("/revoke", async (req, res) => {
   const token = extractBearerToken(req);
 
   if (!token) {
     return res.status(401).json({ error: "missing or invalid authorization header" });
   }
 
-  const session = verifySessionToken(token);
+  const session = decodeSessionToken(token);
 
   if (!session) {
     return res.status(401).json({ error: "invalid session token" });
   }
 
-  revokeSessionToken(token);
+  try {
+    await revokeSessionToken(token);
+  } catch (error) {
+    return res.status(503).json({
+      error: "session revocation cache unavailable",
+      detail: error instanceof Error ? error.message : "unknown redis error",
+    });
+  }
 
   return res.json({ revoked: true });
 });

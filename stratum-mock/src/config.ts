@@ -19,6 +19,9 @@ export const config = {
   // This matches the backend fallback so local JWT validation can work end-to-end.
   SESSION_SECRET:
     process.env.SESSION_SECRET ?? "local-development-only-membership-gateway-secret",
+  // Redis is used for shared session revocation between Membership Gateway and Stratum Gateway.
+  // Local development requires Redis running on localhost:6379.
+  REDIS_URL: process.env.REDIS_URL ?? "redis://localhost:6379",
   DEFAULT_WORKER:
     process.env.DEFAULT_WORKER ??
     "ecash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a.worker1",

@@ -528,6 +528,10 @@ function App() {
             <h2>Revoke Session</h2>
             <span className="status-badge neutral">Step 4</span>
           </div>
+          <p className="note">
+            Revocation is now stored in Redis and shared with the Stratum Gateway
+            mock.
+          </p>
           <button
             type="button"
             className="button-secondary"

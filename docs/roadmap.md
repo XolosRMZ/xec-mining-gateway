@@ -8,7 +8,18 @@
 - ✅ Prototype 4 — Tonalli Wallet Signature Verification
 - ✅ Prototype 5 — RMZ Membership Verification Mock
 - 🎯 Prototype 6 — Chronik RMZ Membership Verification
-- ⏳ Prototype 7 — Shared Redis Revocation Cache
+- 🎯 Prototype 7 — Shared Redis Revocation Cache
+
+## Prototype 7 — Shared Redis Revocation Cache
+
+Status: prototype
+
+Scope:
+
+- backend writes revoked token state to Redis
+- stratum-mock reads revoked token state from Redis
+- token keys are sha256-hashed
+- shared revocation works across control plane and data plane
 
 ## Prototype 6 — Chronik RMZ Membership Verification
 
