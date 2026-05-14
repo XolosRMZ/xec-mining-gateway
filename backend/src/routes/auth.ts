@@ -116,7 +116,18 @@ router.post("/verify", async (req, res) => {
   const membership = await isRmzMember(normalizedWallet);
 
   if (!membership.active) {
-    return res.status(403).json({ error: "RMZ membership required" });
+    return res.status(403).json({
+      error: "RMZ membership required",
+      membership: {
+        active: membership.active,
+        tier: membership.tier,
+        source: membership.source,
+        rmzAtoms: membership.rmzAtoms,
+        rmzRequiredAtoms: membership.rmzRequiredAtoms,
+        tokenId: membership.tokenId,
+        error: membership.error,
+      },
+    });
   }
 
   consumeChallenge(normalizedChallengeId);
@@ -135,6 +146,9 @@ router.post("/verify", async (req, res) => {
       active: membership.active,
       tier: membership.tier,
       source: membership.source,
+      rmzAtoms: membership.rmzAtoms,
+      rmzRequiredAtoms: membership.rmzRequiredAtoms,
+      tokenId: membership.tokenId,
     },
   });
 });

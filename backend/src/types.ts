@@ -14,7 +14,11 @@ export interface MembershipStatus {
   wallet: string;
   tier: MembershipTier;
   active: boolean;
-  source: "mock";
+  source: "mock" | "chronik";
+  rmzAtoms?: string;
+  rmzRequiredAtoms?: string;
+  tokenId?: string;
+  error?: string;
 }
 
 export interface SessionPayload {

@@ -13,6 +13,10 @@ export interface MembershipResponse {
   active: boolean;
   tier: string;
   source: string;
+  rmzAtoms?: string;
+  rmzRequiredAtoms?: string;
+  tokenId?: string;
+  error?: string;
 }
 
 export interface VerifyResponse {
@@ -33,4 +37,5 @@ export interface SessionStatusResponse {
 export interface ApiError {
   error: string;
   status?: number;
+  membership?: MembershipResponse;
 }

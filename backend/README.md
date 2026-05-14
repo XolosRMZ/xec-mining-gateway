@@ -22,9 +22,7 @@ This backend is the first minimal prototype for the Membership Gateway control p
 
 ## What This Prototype Does Not Do Yet
 
-- Chronik membership verification
 - Stratum mining or gateway logic
-- real on-chain RMZ verification
 - Redis or PostgreSQL persistence
 - production hardening such as rate limiting or durable audit logs
 
@@ -230,3 +228,54 @@ CHALLENGE_TTL_SECONDS=300
 ```
 
 The fallback session secret in code is for local development only.
+
+## Prototype 6 - Chronik RMZ Membership Verification
+
+Prototype 6 adds an optional Chronik-backed membership mode without removing the existing mock registry flow.
+
+### Setup
+
+```bash
+MEMBERSHIP_MODE=chronik
+CHRONIK_URLS=https://chronik.xolosarmy.xyz
+RMZ_TOKEN_ID=c923bd0f09c630c5e9980cf518c8d34b6353802a3cb7c3f34fa7cc85c9305908
+MIN_RMZ_ATOMS_REQUIRED=10000
+```
+
+- `10000` atoms = `1` RMZ
+- production can use `25000000` atoms = `2500` RMZ
+- the wallet must actually hold enough RMZ to receive a session token
+
+### Chronik Success Example
+
+```bash
+export WALLET="<rmz-holding-wallet>"
+export CHALLENGE_JSON=$(curl -s -X POST http://localhost:3001/v1/auth/request-challenge \
+  -H "Content-Type: application/json" \
+  -d "{\"wallet\":\"$WALLET\"}")
+export CHALLENGE_ID=$(node -e 'const data = JSON.parse(process.argv[1]); console.log(data.challengeId);' "$CHALLENGE_JSON")
+export SIGNATURE="mock-signature:$WALLET:$CHALLENGE_ID"
+
+curl -X POST http://localhost:3001/v1/auth/verify \
+  -H "Content-Type: application/json" \
+  -d "{\"mode\":\"mock\",\"wallet\":\"$WALLET\",\"challengeId\":\"$CHALLENGE_ID\",\"signature\":\"$SIGNATURE\"}"
+```
+
+Expected result: `membership.source` is `chronik`, `membership.active` is `true`, and the response includes `rmzAtoms`, `rmzRequiredAtoms`, and `tokenId`.
+
+### Chronik Rejection Example
+
+```bash
+export WALLET="<wallet-without-rmz>"
+export CHALLENGE_JSON=$(curl -s -X POST http://localhost:3001/v1/auth/request-challenge \
+  -H "Content-Type: application/json" \
+  -d "{\"wallet\":\"$WALLET\"}")
+export CHALLENGE_ID=$(node -e 'const data = JSON.parse(process.argv[1]); console.log(data.challengeId);' "$CHALLENGE_JSON")
+export SIGNATURE="mock-signature:$WALLET:$CHALLENGE_ID"
+
+curl -i -X POST http://localhost:3001/v1/auth/verify \
+  -H "Content-Type: application/json" \
+  -d "{\"mode\":\"mock\",\"wallet\":\"$WALLET\",\"challengeId\":\"$CHALLENGE_ID\",\"signature\":\"$SIGNATURE\"}"
+```
+
+Expected result: `403 RMZ membership required`.

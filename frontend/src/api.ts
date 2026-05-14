@@ -34,14 +34,21 @@ const parseJson = async <T>(response: Response): Promise<T> => {
   }
 
   if (!response.ok) {
+    const errorPayload =
+      typeof data === "object" && data !== null ? (data as Record<string, unknown>) : {};
     const errorMessage =
-      typeof data === "object" &&
-      data !== null &&
-      "error" in data &&
-      typeof data.error === "string"
-        ? data.error
+      typeof errorPayload.error === "string"
+        ? errorPayload.error
         : text || `Request failed with status ${response.status}`;
-    throw { error: errorMessage, status: response.status } satisfies ApiError;
+    throw {
+      error: errorMessage,
+      status: response.status,
+      ...(errorPayload.membership &&
+      typeof errorPayload.membership === "object" &&
+      errorPayload.membership !== null
+        ? { membership: errorPayload.membership as ApiError["membership"] }
+        : {}),
+    } satisfies ApiError;
   }
 
   return data as T;

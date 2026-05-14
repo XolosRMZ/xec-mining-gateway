@@ -40,4 +40,4 @@ This campaign funds the first public phase of a sovereign mining coordination st
 
 Tonalli Wallet is the Phase 1 identity wallet. RMZ is the required membership layer for mining gateway access. eCash México builds the infrastructure for the XEC ecosystem, while xolosArmy Network provides the cultural and community layer around the campaign.
 
-Prototype 5 uses a mock membership registry. Chronik-based on-chain RMZ verification remains future work.
+Prototype 6 introduces Chronik-based RMZ verification. Production membership will be RMZ-based and on-chain.

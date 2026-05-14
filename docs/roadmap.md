@@ -6,28 +6,29 @@
 - ✅ Prototype 2 — Membership Portal UI
 - ✅ Prototype 3 — Stratum Token Validation Mock
 - ✅ Prototype 4 — Tonalli Wallet Signature Verification
-- 🎯 Prototype 5 — RMZ Membership Verification Mock
-- ⏳ Prototype 6 — Shared Redis Revocation Cache
-- ⏳ Prototype 7 — Chronik Integration / On-chain RMZ Checks
+- ✅ Prototype 5 — RMZ Membership Verification Mock
+- 🎯 Prototype 6 — Chronik RMZ Membership Verification
+- ⏳ Prototype 7 — Shared Redis Revocation Cache
 
-## Prototype 5 — RMZ Membership Verification Mock
+## Prototype 6 — Chronik RMZ Membership Verification
 
 Status: prototype
 
 Scope:
 
-- mock RMZ membership service
-- membership tier lookup
-- session token includes RMZ membership tier
-- verification flow requires active RMZ membership before token issuance
+- Chronik RMZ UTXO lookup
+- RMZ token ID matching
+- atom balance sum
+- minimum RMZ atom threshold
+- fail-closed membership behavior
 
 Out of scope:
 
-- Chronik RMZ token checks
-- on-chain membership verification
 - billing
 - token locking/burning
-- NFT pass validation
+- NFT membership passes
+- Redis revocation
+- production pool payouts
 
 ## Strategic Direction
 
@@ -35,7 +36,7 @@ Out of scope:
 - RMZ is the required membership layer for gateway access.
 - Tonalli Wallet provides identity; RMZ provides membership.
 - eCash México builds the infrastructure for the XEC ecosystem.
-- Chronik-based on-chain RMZ verification remains future work.
+- Prototype 6 introduces Chronik-based RMZ verification.
 
 ## During Teyolia Campaign
 

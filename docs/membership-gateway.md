@@ -150,9 +150,9 @@ function verifyWalletLogin(wallet, challengeId, signature):
 
 ## Membership Notes
 
-RMZ is the required membership layer for gateway access. Tonalli Wallet is the Phase 1 identity wallet. Prototype 5 uses a mock RMZ membership registry before any session token is issued.
+RMZ is the required membership layer for gateway access. Tonalli Wallet is the Phase 1 identity wallet. Prototype 6 introduces Chronik-based RMZ verification, while mock mode remains available for development.
 
-Chronik-based on-chain RMZ verification is future work. Billing, token locking or burning, and NFT pass validation are out of scope for this prototype.
+Production membership will be RMZ-based and on-chain. Billing, token locking or burning, and NFT pass validation are out of scope for this prototype.
 
 ## Operational Notes
 

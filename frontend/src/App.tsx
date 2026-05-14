@@ -9,6 +9,7 @@ import {
 import {
   ApiError,
   ChallengeResponse,
+  MembershipResponse,
   SessionStatusResponse,
   VerificationMode,
   VerifyResponse,
@@ -35,6 +36,29 @@ const getErrorMessage = (error: unknown): string => {
   }
 
   return "Unexpected error";
+};
+
+const getMembershipFromError = (error: unknown): MembershipResponse | undefined => {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "membership" in error &&
+    error.membership &&
+    typeof error.membership === "object"
+  ) {
+    return error.membership as MembershipResponse;
+  }
+
+  return undefined;
+};
+
+const getStatusCode = (error: unknown): number | undefined => {
+  if (typeof error === "object" && error !== null && "status" in error) {
+    const { status } = error as ApiError;
+    return typeof status === "number" ? status : undefined;
+  }
+
+  return undefined;
 };
 
 function App() {
@@ -80,9 +104,15 @@ function App() {
     } catch (error) {
       const apiError = {
         error: getErrorMessage(error),
+        status: getStatusCode(error),
+        membership: getMembershipFromError(error),
       } satisfies ApiError;
       setLatestResponse(apiError);
-      setErrorMessage(apiError.error);
+      setErrorMessage(
+        apiError.status === 403 || apiError.error === "RMZ membership required"
+          ? "RMZ membership required"
+          : apiError.error,
+      );
     } finally {
       setLoadingAction(null);
     }
@@ -197,11 +227,15 @@ function App() {
             Teyolia campaign.
           </p>
           <p className="note">
-            Membership access is powered by RMZ. Prototype 5 uses a mock RMZ
-            membership registry.
+            Membership access is powered by RMZ. Prototype 6 introduces
+            Chronik-based RMZ verification.
           </p>
           <p className="note">
             Approved test wallet: <code>{DEFAULT_PLACEHOLDER}</code>
+          </p>
+          <p className="note">
+            Chronik mode verifies RMZ ownership on-chain. Mock mode uses a
+            development registry.
           </p>
         </header>
 
@@ -363,8 +397,26 @@ function App() {
                 </pre>
               </div>
               <div>
+                <span className="result-label">RMZ Atoms</span>
+                <pre className="code-block">
+                  {session.membership?.rmzAtoms ?? "n/a"}
+                </pre>
+              </div>
+              <div>
+                <span className="result-label">RMZ Required Atoms</span>
+                <pre className="code-block">
+                  {session.membership?.rmzRequiredAtoms ?? "n/a"}
+                </pre>
+              </div>
+              <div>
                 <span className="result-label">Expires In</span>
                 <pre className="code-block">{session.expiresIn} seconds</pre>
+              </div>
+              <div className="result-full">
+                <span className="result-label">RMZ Token ID</span>
+                <pre className="code-block">
+                  {session.membership?.tokenId ?? "n/a"}
+                </pre>
               </div>
               <div className="result-full">
                 <span className="result-label">Session Token</span>
@@ -372,6 +424,48 @@ function App() {
               </div>
             </div>
           )}
+
+          {!session &&
+            latestResponse &&
+            "membership" in latestResponse &&
+            latestResponse.membership && (
+              <div className="result-grid">
+                <div>
+                  <span className="result-label">Membership Active</span>
+                  <pre className="code-block">
+                    {String(latestResponse.membership.active)}
+                  </pre>
+                </div>
+                <div>
+                  <span className="result-label">Membership Tier</span>
+                  <pre className="code-block">{latestResponse.membership.tier}</pre>
+                </div>
+                <div>
+                  <span className="result-label">Membership Source</span>
+                  <pre className="code-block">
+                    {latestResponse.membership.source}
+                  </pre>
+                </div>
+                <div>
+                  <span className="result-label">RMZ Atoms</span>
+                  <pre className="code-block">
+                    {latestResponse.membership.rmzAtoms ?? "n/a"}
+                  </pre>
+                </div>
+                <div>
+                  <span className="result-label">RMZ Required Atoms</span>
+                  <pre className="code-block">
+                    {latestResponse.membership.rmzRequiredAtoms ?? "n/a"}
+                  </pre>
+                </div>
+                <div className="result-full">
+                  <span className="result-label">RMZ Token ID</span>
+                  <pre className="code-block">
+                    {latestResponse.membership.tokenId ?? "n/a"}
+                  </pre>
+                </div>
+              </div>
+            )}
         </section>
 
         <section className="card">
