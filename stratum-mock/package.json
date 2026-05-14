@@ -1,0 +1,23 @@
+{
+  "name": "stratum-mock",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prototype 3 - Stratum token validation mock for eCash Mexico sovereign mining infrastructure",
+  "scripts": {
+    "dev:server": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev:client": "ts-node-dev --respawn --transpile-only src/client.ts",
+    "build": "tsc",
+    "start:server": "node dist/server.js",
+    "start:client": "node dist/client.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.2"
+  }
+}

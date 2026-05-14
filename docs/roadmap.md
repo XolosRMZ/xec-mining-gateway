@@ -47,6 +47,27 @@ Out of scope:
 - Stratum integration
 - production auth security
 
+## Prototype 3 - Stratum Token Validation Mock
+
+Status: prototype
+
+Scope:
+
+- TCP JSON-RPC mock server
+- mining.subscribe mock
+- mining.authorize mock
+- session token validation
+- worker accept/reject logic
+- mock miner client
+
+Out of scope:
+
+- real mining jobs
+- real share validation
+- payouts
+- production Stratum V2
+- Chronik integration
+
 ## Milestone 2 - Stratum Gateway
 
 - Operational miner access layer
