@@ -10,6 +10,7 @@ import {
   ApiError,
   ChallengeResponse,
   SessionStatusResponse,
+  VerificationMode,
   VerifyResponse,
 } from "./types";
 
@@ -42,6 +43,10 @@ function App() {
   const [session, setSession] = useState<VerifyResponse | null>(null);
   const [sessionStatus, setSessionStatus] =
     useState<SessionStatusResponse | null>(null);
+  const [verificationMode, setVerificationMode] =
+    useState<VerificationMode>("mock");
+  const [tonalliPublicKey, setTonalliPublicKey] = useState("");
+  const [tonalliSignature, setTonalliSignature] = useState("");
   const [latestResponse, setLatestResponse] = useState<LatestResponse>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -84,7 +89,23 @@ function App() {
   };
 
   const handleVerify = async () => {
-    if (!challenge || !mockSignature) {
+    if (!challenge) {
+      return;
+    }
+
+    const trimmedWallet = wallet.trim();
+    const trimmedPublicKey = tonalliPublicKey.trim();
+    const trimmedTonalliSignature = tonalliSignature.trim();
+    const signature =
+      verificationMode === "mock" ? mockSignature : trimmedTonalliSignature;
+
+    if (!signature) {
+      setErrorMessage(
+        verificationMode === "mock"
+          ? "Request a challenge before verifying the mock signature."
+          : "Enter the Tonalli public key and signature before verifying.",
+      );
+      setSuccessMessage("");
       return;
     }
 
@@ -93,11 +114,13 @@ function App() {
     setSuccessMessage("");
 
     try {
-      const response = await verifyChallenge(
-        wallet.trim(),
-        challenge.challengeId,
-        mockSignature,
-      );
+      const response = await verifyChallenge({
+        mode: verificationMode,
+        wallet: trimmedWallet,
+        challengeId: challenge.challengeId,
+        signature,
+        ...(verificationMode === "tonalli" ? { publicKey: trimmedPublicKey } : {}),
+      });
       setSession(response);
       setSessionStatus(null);
       setLatestResponse(response);
@@ -203,8 +226,20 @@ function App() {
           {challenge && (
             <div className="result-grid">
               <div>
+                <span className="result-label">Wallet</span>
+                <pre className="code-block">{challenge.wallet}</pre>
+              </div>
+              <div>
                 <span className="result-label">Challenge ID</span>
                 <pre className="code-block">{challenge.challengeId}</pre>
+              </div>
+              <div>
+                <span className="result-label">Nonce</span>
+                <pre className="code-block">{challenge.nonce}</pre>
+              </div>
+              <div>
+                <span className="result-label">Issued At</span>
+                <pre className="code-block">{challenge.issuedAt}</pre>
               </div>
               <div>
                 <span className="result-label">Expires At</span>
@@ -220,21 +255,72 @@ function App() {
 
         <section className="card">
           <div className="section-heading">
-            <h2>Mock Signature</h2>
+            <h2>Verification Mode</h2>
             <span className="status-badge neutral">Step 2</span>
           </div>
-          <span className="result-label">Generated signature</span>
-          <pre className="code-block dimmed">
-            {mockSignature || "Request a challenge to generate the mock signature."}
-          </pre>
-          <p className="note">
-            This is a mock signature for prototype testing only. Production will
-            use real wallet signature verification.
-          </p>
+          <label className="field-label" htmlFor="verificationMode">
+            Verification Mode
+          </label>
+          <select
+            id="verificationMode"
+            value={verificationMode}
+            onChange={(event) =>
+              setVerificationMode(event.target.value as VerificationMode)
+            }
+          >
+            <option value="mock">Mock Prototype</option>
+            <option value="tonalli">Tonalli Signature</option>
+          </select>
+
+          {verificationMode === "mock" ? (
+            <>
+              <span className="result-label">Generated signature</span>
+              <pre className="code-block dimmed">
+                {mockSignature || "Request a challenge to generate the mock signature."}
+              </pre>
+              <p className="note">
+                Mock mode preserves the existing prototype flow using
+                <code>mock-signature:&lt;wallet&gt;:&lt;challengeId&gt;</code>.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="note">
+                Tonalli mode expects a real signature produced by Tonalli Wallet
+                over the exact challenge message shown above.
+              </p>
+              <label className="field-label" htmlFor="tonalliPublicKey">
+                Public key
+              </label>
+              <textarea
+                id="tonalliPublicKey"
+                value={tonalliPublicKey}
+                onChange={(event) => setTonalliPublicKey(event.target.value)}
+                placeholder="Paste the publicKey returned by Tonalli Connect"
+                rows={3}
+              />
+              <label className="field-label" htmlFor="tonalliSignature">
+                Signature
+              </label>
+              <textarea
+                id="tonalliSignature"
+                value={tonalliSignature}
+                onChange={(event) => setTonalliSignature(event.target.value)}
+                placeholder="Paste the signature returned by Tonalli Wallet signMessage(message)"
+                rows={4}
+              />
+            </>
+          )}
           <button
             type="button"
             onClick={handleVerify}
-            disabled={!challenge || !mockSignature || loadingAction !== null}
+            disabled={
+              !challenge ||
+              (verificationMode === "mock" && !mockSignature) ||
+              (verificationMode === "tonalli" &&
+                (!tonalliPublicKey.trim() || !tonalliSignature.trim())) ||
+              loadingAction !== null
+            }
           >
             {loadingAction === "verify"
               ? "Verifying..."

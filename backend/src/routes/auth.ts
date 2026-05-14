@@ -7,7 +7,10 @@ import {
   getChallenge,
 } from "../services/challenge";
 import { issueSessionToken } from "../services/session";
-import { verifyMockSignature } from "../services/signature";
+import {
+  verifyMockSignature,
+  verifyTonalliSignature,
+} from "../services/signature";
 import { AuthRequestChallengeBody, AuthVerifyBody } from "../types";
 
 const router = Router();
@@ -24,15 +27,24 @@ router.post("/request-challenge", (req, res) => {
   return res.json({
     challengeId: challenge.id,
     wallet: challenge.wallet,
+    nonce: challenge.nonce,
     message: challenge.message,
+    issuedAt: challenge.issuedAt,
     expiresAt: challenge.expiresAt,
   });
 });
 
 router.post("/verify", (req, res) => {
-  const { wallet, challengeId, signature } = req.body as Partial<AuthVerifyBody>;
+  const {
+    mode,
+    wallet,
+    challengeId,
+    signature,
+    publicKey,
+  } = req.body as Partial<AuthVerifyBody>;
 
   if (
+    (mode !== "mock" && mode !== "tonalli") ||
     typeof wallet !== "string" ||
     wallet.trim() === "" ||
     typeof challengeId !== "string" ||
@@ -41,12 +53,13 @@ router.post("/verify", (req, res) => {
     signature.trim() === ""
   ) {
     return res.status(400).json({
-      error: "wallet, challengeId, and signature are required and must be strings",
+      error: "mode, wallet, challengeId, and signature are required",
     });
   }
 
   const normalizedWallet = wallet.trim();
   const normalizedChallengeId = challengeId.trim();
+  const normalizedSignature = signature.trim();
   const challenge = getChallenge(normalizedChallengeId);
 
   if (!challenge) {
@@ -65,14 +78,38 @@ router.post("/verify", (req, res) => {
     return res.status(400).json({ error: "wallet does not match challenge" });
   }
 
-  const isValid = verifyMockSignature({
-    wallet: normalizedWallet,
-    challengeId: normalizedChallengeId,
-    signature: signature.trim(),
-  });
+  if (mode === "mock") {
+    const isValid = verifyMockSignature({
+      wallet: normalizedWallet,
+      challengeId: normalizedChallengeId,
+      signature: normalizedSignature,
+    });
 
-  if (!isValid) {
-    return res.status(400).json({ error: "invalid signature" });
+    if (!isValid) {
+      return res.status(400).json({ error: "invalid mock signature" });
+    }
+  }
+
+  if (mode === "tonalli") {
+    if (typeof publicKey !== "string" || publicKey.trim() === "") {
+      return res.status(400).json({ error: "publicKey is required for tonalli mode" });
+    }
+
+    const verification = verifyTonalliSignature({
+      wallet: normalizedWallet,
+      publicKey: publicKey.trim(),
+      signature: normalizedSignature,
+      message: challenge.message,
+    });
+
+    if (!verification.valid) {
+      return res.status(400).json({
+        error: verification.reason ?? "invalid Tonalli signature",
+        ...(verification.derivedWallet
+          ? { derivedWallet: verification.derivedWallet }
+          : {}),
+      });
+    }
   }
 
   consumeChallenge(normalizedChallengeId);

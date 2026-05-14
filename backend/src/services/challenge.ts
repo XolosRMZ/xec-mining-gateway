@@ -5,19 +5,46 @@ import { ChallengeRecord } from "../types";
 
 const challengeStore = new Map<string, ChallengeRecord>();
 
+const buildCanonicalChallengeMessage = (record: {
+  wallet: string;
+  id: string;
+  nonce: string;
+  issuedAt: string;
+  expiresAt: string;
+}): string =>
+  [
+    "eCash México Mining Gateway Authentication",
+    "",
+    "domain: ecash.mx",
+    `wallet: ${record.wallet}`,
+    `challengeId: ${record.id}`,
+    `nonce: ${record.nonce}`,
+    `issuedAt: ${record.issuedAt}`,
+    `expiresAt: ${record.expiresAt}`,
+    "purpose: mining-gateway-session",
+  ].join("\n");
+
 export const createChallenge = (wallet: string): ChallengeRecord => {
   cleanupExpiredChallenges();
 
   const id = uuidv4();
   const nonce = uuidv4();
+  const issuedAt = new Date().toISOString();
   const expiresAt = new Date(Date.now() + config.CHALLENGE_TTL_SECONDS * 1000).toISOString();
-  const message = `eCash México Mining Gateway authentication challenge: ${nonce}`;
+  const message = buildCanonicalChallengeMessage({
+    wallet,
+    id,
+    nonce,
+    issuedAt,
+    expiresAt,
+  });
 
   const record: ChallengeRecord = {
     id,
     wallet,
     nonce,
     message,
+    issuedAt,
     expiresAt,
     used: false,
   };

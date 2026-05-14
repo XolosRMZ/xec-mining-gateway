@@ -2,6 +2,7 @@ import {
   ApiError,
   ChallengeResponse,
   SessionStatusResponse,
+  VerificationMode,
   VerifyResponse,
 } from "./types";
 
@@ -61,16 +62,20 @@ export const requestChallenge = async (
 };
 
 export const verifyChallenge = async (
-  wallet: string,
-  challengeId: string,
-  signature: string,
+  params: {
+    mode: VerificationMode;
+    wallet: string;
+    challengeId: string;
+    signature: string;
+    publicKey?: string;
+  },
 ): Promise<VerifyResponse> => {
   const response = await fetch(buildUrl("/v1/auth/verify"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ wallet, challengeId, signature }),
+    body: JSON.stringify(params),
   });
 
   return parseJson<VerifyResponse>(response);

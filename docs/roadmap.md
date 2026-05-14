@@ -68,6 +68,25 @@ Out of scope:
 - production Stratum V2
 - Chronik integration
 
+## Prototype 4 - Tonalli Wallet Signature Verification
+
+Status: prototype
+
+Scope:
+
+- canonical mining gateway challenge
+- Tonalli signature verification mode
+- publicKey + signature verification
+- manual frontend Tonalli mode
+- mock mode preserved for development
+
+Out of scope:
+
+- direct Tonalli Wallet connection
+- Chronik membership verification
+- Redis revocation
+- production billing
+
 ## Milestone 2 - Stratum Gateway
 
 - Operational miner access layer

@@ -3,6 +3,7 @@ export interface ChallengeRecord {
   wallet: string;
   nonce: string;
   message: string;
+  issuedAt: string;
   expiresAt: string;
   used: boolean;
 }
@@ -20,9 +21,11 @@ export interface AuthRequestChallengeBody {
 }
 
 export interface AuthVerifyBody {
+  mode: "mock" | "tonalli";
   wallet: string;
   challengeId: string;
   signature: string;
+  publicKey?: string;
 }
 
 export interface SessionStatusQuery {

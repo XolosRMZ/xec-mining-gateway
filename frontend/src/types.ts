@@ -1,9 +1,13 @@
 export interface ChallengeResponse {
   challengeId: string;
   wallet: string;
+  nonce: string;
   message: string;
+  issuedAt: string;
   expiresAt: string;
 }
+
+export type VerificationMode = "mock" | "tonalli";
 
 export interface VerifyResponse {
   sessionToken: string;

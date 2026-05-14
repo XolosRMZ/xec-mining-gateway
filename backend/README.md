@@ -4,8 +4,8 @@ This backend is the first minimal prototype for the Membership Gateway control p
 
 - wallet submits a challenge request
 - server creates a nonce-backed challenge
-- client submits wallet, challenge ID, and a mock signature
-- server performs mock verification
+- client submits wallet, challenge ID, and either a mock signature or a Tonalli signature payload
+- server performs mock verification or Tonalli signature verification
 - server issues a session token
 - client checks session status
 - client revokes the session
@@ -16,11 +16,11 @@ This backend is the first minimal prototype for the Membership Gateway control p
 - stores challenges in memory
 - issues JWT session tokens
 - supports session status and session revocation
-- uses a mock signature format to demonstrate the flow end to end
+- preserves mock verification for development
+- verifies Tonalli-style signed messages with `ecash-lib`
 
 ## What This Prototype Does Not Do Yet
 
-- real eCash wallet cryptographic verification
 - Chronik membership verification
 - Stratum mining or gateway logic
 - RMZ logic
@@ -69,8 +69,10 @@ Example response:
 {
   "challengeId": "7e3b5c5f-6a1c-44ea-9b71-2db943a3fc7a",
   "wallet": "ecash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a",
-  "message": "eCash México Mining Gateway authentication challenge: 0d23...",
-  "expiresAt": "2026-05-13T12:00:00.000Z"
+  "nonce": "0d23...",
+  "message": "eCash México Mining Gateway Authentication\n\ndomain: ecash.mx\nwallet: ecash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a\nchallengeId: 7e3b5c5f-6a1c-44ea-9b71-2db943a3fc7a\nnonce: 0d23...\nissuedAt: 2026-05-14T12:00:00.000Z\nexpiresAt: 2026-05-14T12:05:00.000Z\npurpose: mining-gateway-session",
+  "issuedAt": "2026-05-14T12:00:00.000Z",
+  "expiresAt": "2026-05-14T12:05:00.000Z"
 }
 ```
 
@@ -94,7 +96,7 @@ export SIGNATURE="mock-signature:$WALLET:$CHALLENGE_ID"
 ```bash
 curl -X POST http://localhost:3001/v1/auth/verify \
   -H "Content-Type: application/json" \
-  -d "{\"wallet\":\"$WALLET\",\"challengeId\":\"$CHALLENGE_ID\",\"signature\":\"$SIGNATURE\"}"
+  -d "{\"mode\":\"mock\",\"wallet\":\"$WALLET\",\"challengeId\":\"$CHALLENGE_ID\",\"signature\":\"$SIGNATURE\"}"
 ```
 
 Example response:
@@ -123,6 +125,47 @@ curl http://localhost:3001/v1/session/status \
 curl -X POST http://localhost:3001/v1/session/revoke \
   -H "Authorization: Bearer $SESSION_TOKEN"
 ```
+
+## Tonalli Signature Verification Prototype
+
+Tonalli mode keeps the session token format unchanged and adds real signed-message verification for Prototype 4.
+
+### Request a Challenge
+
+```bash
+curl -X POST http://localhost:3001/v1/auth/request-challenge \
+  -H "Content-Type: application/json" \
+  -d "{\"wallet\":\"$WALLET\"}"
+```
+
+### Sign the Exact Message in Tonalli Wallet
+
+Sign the exact `message` returned by the backend. Do not change whitespace or line endings.
+
+### Verify with Wallet, Public Key, Signature, and Challenge ID
+
+```bash
+export TONALLI_PUBLIC_KEY="<publicKey from Tonalli Connect>"
+export TONALLI_SIGNATURE="<signature from Tonalli Wallet signMessage(message)>"
+
+curl -X POST http://localhost:3001/v1/auth/verify \
+  -H "Content-Type: application/json" \
+  -d "{\"mode\":\"tonalli\",\"wallet\":\"$WALLET\",\"challengeId\":\"$CHALLENGE_ID\",\"publicKey\":\"$TONALLI_PUBLIC_KEY\",\"signature\":\"$TONALLI_SIGNATURE\"}"
+```
+
+### Manual Verification Helper
+
+After `npm run build`, you can also inspect Tonalli verification locally:
+
+```bash
+node dist/scripts/verifyTonalliSignature.js "$WALLET" "$TONALLI_PUBLIC_KEY" "$TONALLI_SIGNATURE" "$MESSAGE"
+```
+
+### Notes
+
+- mock mode remains available for development
+- Tonalli mode expects a real signature over the exact challenge message
+- the prototype derives a P2PKH eCash wallet from the provided public key and compares it to the requested wallet
 
 ## Configuration
 
